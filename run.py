@@ -9,8 +9,8 @@ all_models = [
     "xlnet-large-cased",
 ]
 
-results = list(map(train, all_models))
-print(results)
-with open("results.json", "w") as f:
-    json.dump(results, f)
+for model in all_models:
+    result = train(model)
+    with open(f"result_{model}.json", "w") as f:
+        json.dump(result, f)
 # print(f"Best model: {max(evals.items(), lambda kv: kv[1])}")
