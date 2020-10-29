@@ -23,7 +23,7 @@ def train(
     train_args: TrainingArguments = None,
 ) -> Dict[str, float]:
     if data_args is None:
-        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./STS-B")
+        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
     if config is None:
         config = AutoConfig.from_pretrained(
             model_name,
