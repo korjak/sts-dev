@@ -26,7 +26,7 @@ for model_name in all_models:
 
     # Define your train dataset, the dataloader and the train loss
     train_data = SentencesDataset(
-        sts_reader.get_examples("./data/combined/train.tsv"), model
+        sts_reader.get_examples("train.tsv"), model
     )
     train_dataloader = DataLoader(train_data, shuffle=True, batch_size=16)
     train_loss = losses.CosineSimilarityLoss(model)
@@ -41,6 +41,6 @@ for model_name in all_models:
 
     model = SentenceTransformer(model_save_path)
     test_evaluator = EmbeddingSimilarityEvaluator.from_input_examples(
-        sts_reader.get_examples("./data/combined/test.tsv"), name="sts-test"
+        sts_reader.get_examples("test.tsv"), name="sts-test"
     )
     test_evaluator(model, output_path=model_save_path)
