@@ -3,6 +3,8 @@ from sentence_transformers.readers import STSBenchmarkDataReader
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator
 from torch.utils.data import DataLoader
 from datetime import datetime
+import csv
+import os
 
 all_models = [
     "SparkBeyond/roberta-large-sts-b",
@@ -13,6 +15,13 @@ all_models = [
 ]
 
 sts_reader = STSBenchmarkDataReader("data/combined", normalize_scores=True, s1_col_idx=-3, s2_col_idx=-2, score_col_idx=-1)
+
+for dataset_type in ["train", "test"]:
+    with open(f"./data/combined/{dataset_type}.tsv") as f:
+        fcsv_h = list(csv.reader(f, delimiter="\t"))
+    with open(f"./data/combined/{dataset_type}_st.tsv", "w") as f:
+        fcsv = csv.writer(f, delimiter="\t")
+        fcsv.writerows(fcsv_h[1:])
 
 for model_name in all_models:
 
@@ -39,3 +48,6 @@ for model_name in all_models:
         sts_reader.get_examples("test.tsv"), name="sts-test"
     )
     test_evaluator(model, output_path=model_save_path)
+
+for dataset_type in ["train", "test"]:
+    os.remove(f"./data/combined/{dataset_type}_st.tsv")
