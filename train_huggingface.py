@@ -1,4 +1,4 @@
-from sts_dev import train
+from sts_dev import train_hf
 import json
 
 all_models = [
@@ -10,7 +10,8 @@ all_models = [
 ]
 
 for model in all_models:
-    result = train(model)
+    result = train_hf(model)
     with open(f"result_{model}.json", "w") as f:
         json.dump(result, f)
+
 # print(f"Best model: {max(evals.items(), lambda kv: kv[1])}")
