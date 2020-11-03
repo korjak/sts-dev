@@ -12,7 +12,7 @@ all_models = [
     "xlnet-large-cased",
 ]
 
-sts_reader = STSBenchmarkDataReader("data/combined", normalize_scores=True)
+sts_reader = STSBenchmarkDataReader("data/combined", normalize_scores=True, s1_col_idx=-3, s2_col_idx=-2, score_col_idx=-1)
 
 for model_name in all_models:
 

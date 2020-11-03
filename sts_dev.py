@@ -6,8 +6,6 @@ from transformers import (
     AutoModelForSequenceClassification,
     Trainer,
     AutoConfig,
-    glue_output_modes,
-    glue_tasks_num_labels,
     GlueDataset,
     GlueDataTrainingArguments,
     TrainingArguments,
@@ -16,14 +14,14 @@ from transformers import (
 )
 
 
-def train(
+def train_hf(
     model_name: str,
     data_args: GlueDataTrainingArguments = None,
     config: AutoConfig = None,
     train_args: TrainingArguments = None,
 ) -> Dict[str, float]:
     if data_args is None:
-        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
+        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/combined")
     if config is None:
         config = AutoConfig.from_pretrained(
             model_name,
@@ -36,7 +34,7 @@ def train(
             do_eval=True,
             max_steps=1200,
             warmup_steps=120,
-            output_dir="./out/",
+            output_dir="./hf_models/",
         )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
