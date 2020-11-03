@@ -1,4 +1,4 @@
-index	genre	filename	year	old_index	source1	source2	sentence1	sentence2	score
+    index	genre	filename	year	old_index	source1	source2	sentence1	sentence2	score
 215								Software developers use compilers to translate programming languages such as C++ into the language that can be read by a particular processor.	Software developers use compilers to translate a programming language, such as C++, into the machine language understood by the processor.	5.0
 8041	2465	main-news	MSRpar	2012test	29	none	none	Microsoft acquired Virtual PC when it bought the assets of Connectix earlier this year.	Microsoft acquired Virtual PC from its developer, Connectix, earlier this year.	4.4
 6714	1135	main-captions	images	2014	197	none	none	A pot of liquid is at the center of a tinfoil covered plate.	A pot of food is placed in the center of a red tablecloth.	1.4
