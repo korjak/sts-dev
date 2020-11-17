@@ -1,5 +1,7 @@
 from typing import Callable, Dict
 import numpy as np
+from scipy.stats import pearsonr
+
 
 from transformers import (
     AutoTokenizer,
@@ -12,6 +14,11 @@ from transformers import (
     EvalPrediction,
     glue_compute_metrics,
 )
+
+#aint much but it's honest work
+#returns Pearson correlation coefficient, but p-value is also calculated
+def evaluate(x, y):
+    return pearsonr(x, y)[0]
 
 
 def train_hf(
