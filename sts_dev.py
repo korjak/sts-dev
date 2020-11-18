@@ -1,7 +1,8 @@
 from typing import Callable, Dict
 import numpy as np
 from scipy.stats import pearsonr
-
+import csv
+import torch
 
 from transformers import (
     AutoTokenizer,
@@ -17,8 +18,48 @@ from transformers import (
 
 #aint much but it's honest work
 #returns Pearson correlation coefficient, but p-value is also calculated
-def evaluate(x, y):
+def compute_pearson(x, y):
     return pearsonr(x, y)[0]
+
+def eval_hf(model_name: str, set_types: str = "all", model_dictionary: str = "./hf_models"):
+
+    data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
+    config = AutoConfig.from_pretrained(
+        model_name,
+        num_labels=1,
+        finetuning_task="sts-b",
+    )
+
+    train_args = TrainingArguments(
+        do_eval=True,
+        output_dir=f"./hf_eval/{model_name}",
+    )
+
+    def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
+        def compute_metrics_fn(p: EvalPrediction):
+            return glue_compute_metrics(
+                task_name, np.squeeze(p.predictions), p.label_ids
+            )
+
+        return compute_metrics_fn
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
+    train_test_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="train")
+    eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
+    test_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="test")
+
+    model = AutoModelForSequenceClassification.from_pretrained(
+        model_name,
+        config=config,
+    )
+    trainer = Trainer(
+        model=model,
+        args=train_args,
+        compute_metrics=build_compute_metrics_fn("sts-b"),
+    )
+
+    return {"train": trainer.evaluate(eval_dataset=train_test_dataset), "dev": trainer.evaluate(eval_dataset=eval_dataset)}
 
 
 def train_hf(
@@ -28,7 +69,7 @@ def train_hf(
     train_args: TrainingArguments = None,
 ) -> Dict[str, float]:
     if data_args is None:
-        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/combined")
+        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
     if config is None:
         config = AutoConfig.from_pretrained(
             model_name,
@@ -39,9 +80,8 @@ def train_hf(
         train_args = TrainingArguments(
             do_train=True,
             do_eval=True,
-            max_steps=1200,
-            warmup_steps=120,
-            output_dir="./hf_models/",
+            num_train_epochs=5.0,
+            output_dir=f"./hf_models/{model_name}",
         )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
