@@ -1,6 +1,8 @@
 from typing import Callable, Dict
 import numpy as np
 from scipy.stats import pearsonr
+import os
+import re
 
 
 from transformers import (
@@ -20,12 +22,16 @@ from transformers import (
 def evaluate(x, y):
     return pearsonr(x, y)[0]
 
+def extract_number(f):
+    s = re.findall("\d+$",f)
+    return (int(s[0]) if s else -1,f)
 
 def train_hf(
     model_name: str,
     data_args: GlueDataTrainingArguments = None,
     config: AutoConfig = None,
     train_args: TrainingArguments = None,
+    checkpoint_args: from_checkpoint=False, checkpoint_path="./hf_models/",
 ) -> Dict[str, float]:
     if data_args is None:
         data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/combined")
@@ -52,10 +58,18 @@ def train_hf(
 
         return compute_metrics_fn
 
+    if from_checkpoint==True:
+        checkpoints=next(os.walk(checkpoint_path+model_name))[1]
+        #tu albo ta wartosc sie zmieni na sciezke, a jak nie wejdzie w ifa to zostanie sama nazwa
+        #https://discuss.huggingface.co/t/loading-model-from-checkpoint-after-error-in-training/758/3
+        model_name="./"+model_name+"/"+str(max(checkpoints,key=extract_number))
+        
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
     eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
 
+    
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         config=config,
