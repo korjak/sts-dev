@@ -1,6 +1,8 @@
 from typing import Callable, Dict
 import numpy as np
 from scipy.stats import pearsonr
+import os
+import re
 
 
 from transformers import (
@@ -20,12 +22,16 @@ from transformers import (
 def evaluate(x, y):
     return pearsonr(x, y)[0]
 
+def extract_number(f):
+    s = re.findall("\d+$",f)
+    return (int(s[0]) if s else -1,f)
 
 def train_hf(
     model_name: str,
     data_args: GlueDataTrainingArguments = None,
     config: AutoConfig = None,
     train_args: TrainingArguments = None,
+    from_checkpoint=False, checkpoint_path="./hf_models/",
 ) -> Dict[str, float]:
     if data_args is None:
         data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/combined")
@@ -52,10 +58,19 @@ def train_hf(
 
         return compute_metrics_fn
 
+    #here we still need model_name to be solely a name, not a path
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
     eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
 
+    #with this condition we can change model_name to the path to the latest checkpoint
+    if from_checkpoint==True:
+        #we search for every checkpoint created for our model
+        checkpoints=next(os.walk(checkpoint_path+model_name))[1]
+        #and set model_name as the path to the one with highest number
+        model_name=checkpoint_path+model_name+"/"+str(max(checkpoints,key=extract_number))
+
+    
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         config=config,
