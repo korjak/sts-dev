@@ -19,12 +19,15 @@ from transformers import (
     glue_compute_metrics,
 )
 
-#aint much but it's honest work
-#returns Pearson correlation coefficient, but p-value is also calculated
+# aint much but it's honest work
+# returns Pearson correlation coefficient, but p-value is also calculated
 def compute_pearson(x, y):
     return pearsonr(x, y)[0]
 
-def eval_hf(model_name: str, set_types: str = "all", model_dictionary: str = "./hf_models"):
+
+def eval_hf(
+    model_name: str, set_types: str = "all", model_dictionary: str = "./hf_models"
+):
 
     data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
     config = AutoConfig.from_pretrained(
@@ -62,21 +65,29 @@ def eval_hf(model_name: str, set_types: str = "all", model_dictionary: str = "./
         compute_metrics=build_compute_metrics_fn("sts-b"),
     )
 
-    return {"train": trainer.evaluate(eval_dataset=train_test_dataset), "dev": trainer.evaluate(eval_dataset=eval_dataset)}
+    return {
+        "train": trainer.evaluate(eval_dataset=train_test_dataset),
+        "dev": trainer.evaluate(eval_dataset=eval_dataset),
+    }
+
 
 def extract_number(f):
-    s = re.findall("\d+$",f)
-    return (int(s[0]) if s else -1,f)
+    s = re.findall("\d+$", f)
+    return (int(s[0]) if s else -1, f)
+
 
 def train_hf(
     model_name: str,
     data_args: GlueDataTrainingArguments = None,
     config: AutoConfig = None,
     train_args: TrainingArguments = None,
-    from_checkpoint=False, checkpoint_path="./hf_models/",
+    from_checkpoint=False,
+    checkpoint_path="./hf_models/",
 ) -> Dict[str, float]:
     if data_args is None:
-        data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
+        data_args = GlueDataTrainingArguments(
+            task_name="sts-b", data_dir="./data/STS-B"
+        )
     if config is None:
         config = AutoConfig.from_pretrained(
             model_name,
@@ -99,19 +110,23 @@ def train_hf(
 
         return compute_metrics_fn
 
-    #here we still need model_name to be solely a name, not a path
+    # here we still need model_name to be solely a name, not a path
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
     eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
 
-    #with this condition we can change model_name to the path to the latest checkpoint
-    if from_checkpoint==True:
-        #we search for every checkpoint created for our model
-        checkpoints=next(os.walk(checkpoint_path+model_name))[1]
-        #and set model_name as the path to the one with highest number
-        model_name=checkpoint_path+model_name+"/"+str(max(checkpoints,key=extract_number))
+    # with this condition we can change model_name to the path to the latest checkpoint
+    if from_checkpoint == True:
+        # we search for every checkpoint created for our model
+        checkpoints = next(os.walk(checkpoint_path + model_name))[1]
+        # and set model_name as the path to the one with highest number
+        model_name = (
+            checkpoint_path
+            + model_name
+            + "/"
+            + str(max(checkpoints, key=extract_number))
+        )
 
-    
     model = AutoModelForSequenceClassification.from_pretrained(
         model_name,
         config=config,
