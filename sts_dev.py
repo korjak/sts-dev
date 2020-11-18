@@ -1,14 +1,11 @@
 from typing import Callable, Dict
 import numpy as np
 from scipy.stats import pearsonr
-<<<<<<< HEAD
 import csv
 import torch
-=======
 import os
 import re
 
->>>>>>> 38ab3c2c059f3a503ef4cb602c238f0035dac1ce
 
 from transformers import (
     AutoTokenizer,
