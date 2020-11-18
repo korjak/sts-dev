@@ -137,4 +137,4 @@ Werkzeug==1.0.1
 widgetsnbextension==3.5.1
 xxhash==2.0.0
 zipp==3.3.0
-scipy.stats==1.5.4
+#scipy.stats==1.5.4

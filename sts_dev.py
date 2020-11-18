@@ -31,7 +31,7 @@ def train_hf(
     data_args: GlueDataTrainingArguments = None,
     config: AutoConfig = None,
     train_args: TrainingArguments = None,
-    checkpoint_args: from_checkpoint=False, checkpoint_path="./hf_models/",
+    from_checkpoint=False, checkpoint_path="./hf_models/",
 ) -> Dict[str, float]:
     if data_args is None:
         data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/combined")
@@ -58,16 +58,17 @@ def train_hf(
 
         return compute_metrics_fn
 
-    if from_checkpoint==True:
-        checkpoints=next(os.walk(checkpoint_path+model_name))[1]
-        #tu albo ta wartosc sie zmieni na sciezke, a jak nie wejdzie w ifa to zostanie sama nazwa
-        #https://discuss.huggingface.co/t/loading-model-from-checkpoint-after-error-in-training/758/3
-        model_name="./"+model_name+"/"+str(max(checkpoints,key=extract_number))
-        
-    
+    #here we still need model_name to be solely a name, not a path
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
     eval_dataset = GlueDataset(data_args, tokenizer=tokenizer, mode="dev")
+
+    #with this condition we can change model_name to the path to the latest checkpoint
+    if from_checkpoint==True:
+        #we search for every checkpoint created for our model
+        checkpoints=next(os.walk(checkpoint_path+model_name))[1]
+        #and set model_name as the path to the one with highest number
+        model_name=checkpoint_path+model_name+"/"+str(max(checkpoints,key=extract_number))
 
     
     model = AutoModelForSequenceClassification.from_pretrained(
