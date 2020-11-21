@@ -33,10 +33,10 @@ def extract_number(f):
 def eval_hf(
     model_name: str,
     set_types: str = "all",
-    model_dictionary: str = "./hf_models",
+    checkpoint_path: str = "./hf_models",
     fixed_checkpoint_no: int = None,
 ):
-
+    model_directory = model_name.replace("/", "_")
     data_args = GlueDataTrainingArguments(task_name="sts-b", data_dir="./data/STS-B")
     config = AutoConfig.from_pretrained(
         model_name,
@@ -46,6 +46,7 @@ def eval_hf(
 
     train_args = TrainingArguments(
         do_eval=True,
+        output_dir="/data/out"
     )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
@@ -55,15 +56,13 @@ def eval_hf(
             )
 
         return compute_metrics_fn
-
-    checkpoints = next(os.walk(checkpoint_path + model_name))[1]
+    # print(os.listdir(os.path.join(checkpoint_path, model_directory)))
+    checkpoints = next(os.walk(os.path.join(checkpoint_path, model_directory)))[1]
     if fixed_checkpoint_no is not None:
         checkpoint_no = fixed_checkpoint_no
     else:
         checkpoint_no = max(checkpoints, key=extract_number)
-    model_path = (
-        checkpoint_path + model_name + "/" + str(checkpoint_no)
-    )
+    model_path = os.path.join(checkpoint_path, model_directory,  "checkpoint-" + str(checkpoint_no))
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     train_dataset = GlueDataset(data_args, tokenizer=tokenizer)
